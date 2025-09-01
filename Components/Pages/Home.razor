@@ -1,0 +1,204 @@
+﻿@page "/"
+@rendermode InteractiveServer
+
+@using Syncfusion.Blazor
+@using Syncfusion.Blazor.Charts
+@using Syncfusion.Blazor.Buttons
+@using Syncfusion.Blazor.Spinner
+@using Newtonsoft.Json
+@using ForecastWithBlazorSplineChart.Services
+@inject NavigationManager NavigationManager
+@inject AISampleService OpenAIService
+
+
+<div class="chart-container">
+
+    <div class="button-container">
+        <SfButton @onclick="AnimateButton" title="Forecast" aria-label="AI Assistant" CssClass="@($"ai-button {animationClass}")"></SfButton>
+    </div>
+
+    <SfChart Title="Water Consumption in New York City" Theme="Theme.Bootstrap5">
+        <SfSpinner @bind-Visible="@SpinnerVisibility"></SfSpinner>
+        <ChartPrimaryXAxis Interval="1" IntervalType="IntervalType.Years" Title="Year" ValueType="Syncfusion.Blazor.Charts.ValueType.DateTime">
+            @if (HasForecastData)
+            {
+                <ChartStriplines>
+                    @foreach (var strip in forecastStriplines)
+                    {
+                        <ChartStripline StartFromAxis="false" Start="@strip.Start" Size="@strip.Size" ZIndex="ZIndex.Behind" Opacity="0.2" Color="blue" />
+                    }
+                </ChartStriplines>
+            }
+        </ChartPrimaryXAxis>
+        <ChartPrimaryYAxis Title="Water Consumption(Million gallons per day)">
+            <ChartAxisTitleStyle TextAlignment="Syncfusion.Blazor.Charts.Alignment.Center" />
+        </ChartPrimaryYAxis>
+        <ChartSeriesCollection>
+            <ChartSeries DataSource="@WaterConsumptionData" Width="3" Fill="#3674B5" XName="Year" YName="WaterConsumptionInGallons" Type="Syncfusion.Blazor.Charts.ChartSeriesType.Spline">
+                <ChartMarker Visible="true" Height="5" Width="5">
+                    <ChartDataLabel Visible="true">
+                    </ChartDataLabel>
+                </ChartMarker>
+            </ChartSeries>
+        </ChartSeriesCollection>
+
+        <ChartTooltipSettings Enable="true" Format="${point.x} : <b>${point.y} MGD</b>"></ChartTooltipSettings>
+        <ChartZoomSettings EnableMouseWheelZooming="true" EnablePinchZooming="true" EnableSelectionZooming="true"></ChartZoomSettings>
+    </SfChart>
+</div>
+
+<style>
+    .chart-container {
+    position: relative;
+    }
+
+    .button-container {
+        position: absolute;
+        top: -10px;
+        right: 10px;
+        z-index: 100;
+    }
+
+     .ai-button {
+        background-image: url('../ai_assist_view.png'), radial-gradient(circle, #97d6e1 0%, #077391 90%);
+        background-size: contain;
+        background-repeat: no-repeat;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: none;
+        box-shadow: 0 0 10px rgba(33, 150, 243, 0.7);
+    }
+
+    .ai-button:hover {
+        background-image: url('../ai_assist_view.png'), radial-gradient(circle, #7cd1f8 0%, #1480d7 90%);
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+    }
+
+    .ai-button:active, .ai-button:focus {
+        background-image: url('../ai_assist_view.png'), radial-gradient(circle,  #b0dff4 0%, #0c4d82 90%);
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+        outline: none;
+    }
+
+    .pulse-animation {
+        animation: pulse 1.5s infinite;
+    }
+
+    @@keyframes pulse {
+        0% {
+            box-shadow: 0 0 0 0 rgba(33, 150, 243, 0.7);
+        }
+        70% {
+            box-shadow: 0 0 0 10px rgba(33, 150, 243, 0);
+        }
+        100% {
+            box-shadow: 0 0 0 0 rgba(33, 150, 243, 0);
+        }
+    }
+</style>
+
+@code {
+    private string animationClass = "";
+    private bool isLoading = false;
+    private bool SpinnerVisibility { get; set; } = false;
+    private bool HasForecastData { get; set; } = false;
+
+    public class StriplineInfo
+    {
+        public DateTime Start { get; set; }
+        public double Size { get; set; }
+    }
+
+    private List<StriplineInfo> forecastStriplines = new List<StriplineInfo>();
+
+    private async Task AnimateButton()
+    {
+        if (isLoading)
+        {
+            return;
+        }
+
+        isLoading = true;
+        SpinnerVisibility = true;
+        animationClass = "pulse-animation";
+        await InvokeAsync(StateHasChanged);
+        await Task.Delay(2000);
+        await GetForecastData("water consumption forecast ");
+        isLoading = false;
+        animationClass = "";
+        await InvokeAsync(StateHasChanged);
+        SpinnerVisibility = false;
+
+    }
+
+    public class WaterConsumption
+    {
+        public DateTime Year { get; set; }
+        public double Population { get; set; }
+        public double WaterConsumptionInGallons { get; set; }
+    }
+
+    public List<WaterConsumption> WaterConsumptionData = new List<WaterConsumption>
+    {
+        new WaterConsumption { Year = new DateTime(2010, 01, 01), Population = 8175133, WaterConsumptionInGallons = 1039},
+        new WaterConsumption { Year = new DateTime(2011, 01, 01), Population = 8337907, WaterConsumptionInGallons = 1021},
+        new WaterConsumption { Year = new DateTime(2012, 01, 01), Population = 8463961, WaterConsumptionInGallons = 1009.1},
+        new WaterConsumption { Year = new DateTime(2013, 01, 01), Population = 8565517, WaterConsumptionInGallons = 1006.1},
+        new WaterConsumption { Year = new DateTime(2014, 01, 01), Population = 8655238, WaterConsumptionInGallons = 996},
+        new WaterConsumption { Year = new DateTime(2015, 01, 01), Population = 8736590, WaterConsumptionInGallons = 1009},
+        new WaterConsumption { Year = new DateTime(2016, 01, 01), Population = 8794592, WaterConsumptionInGallons = 1002},
+        new WaterConsumption { Year = new DateTime(2017, 01, 01), Population = 8815395, WaterConsumptionInGallons = 990.2},
+        new WaterConsumption { Year = new DateTime(2018, 01, 01), Population = 8826377, WaterConsumptionInGallons = 1008},
+        new WaterConsumption { Year = new DateTime(2019, 01, 01), Population = 8824751, WaterConsumptionInGallons = 987.4},
+        new WaterConsumption { Year = new DateTime(2020, 01, 01), Population = 8804190, WaterConsumptionInGallons = 981},
+        new WaterConsumption { Year = new DateTime(2021, 01, 01), Population = 8454000, WaterConsumptionInGallons = 979},
+        new WaterConsumption { Year = new DateTime(2022, 01, 01), Population = 8356000, WaterConsumptionInGallons = 999},
+        new WaterConsumption { Year = new DateTime(2023, 01, 01), Population = 8391000, WaterConsumptionInGallons = 997},
+        new WaterConsumption { Year = new DateTime(2024, 01, 01), Population = 8478000, WaterConsumptionInGallons = 1002}
+    };
+
+    public async Task GetForecastData(string value)
+    {
+        var lastYear = WaterConsumptionData.Max(d => d.Year).Year;
+        string dataJson = JsonConvert.SerializeObject(WaterConsumptionData);
+        string prompt = $"Generate {value} data for the next 5 years after {lastYear} in JSON array format using this structure: [{{\"Year\": \"2025-01-01\", \"Population\": 8500000, \"WaterConsumptionInGallons\": 1000}}]. Base it on: {dataJson} and the data should avoid uniform increase or decrease and should realistically reflect past trends and fluctuations.  ";
+        string result = await OpenAIService.GetAIResponse(prompt);
+        var jsonStart = result.IndexOf('[');
+        var jsonEnd = result.LastIndexOf(']');
+        if (jsonStart >= 0 && jsonEnd > jsonStart)
+        {
+            var jsonSubstring = result.Substring(jsonStart, jsonEnd - jsonStart + 1);
+            try
+            {
+                var forecastData = JsonConvert.DeserializeObject<List<WaterConsumption>>(jsonSubstring);
+
+                if (forecastData != null)
+                {
+                    HasForecastData = true;
+                    var stripline = new StriplineInfo
+                        {
+                            Start = forecastData[0].Year,
+                            Size = forecastData.Count
+                        };
+                    forecastStriplines.Add(stripline);
+                    foreach (var item in forecastData)
+                    {
+                        WaterConsumptionData.Add(item);
+                        StateHasChanged();
+                        await Task.Delay(500);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error deserializing forecast data: {ex.Message}");
+            }
+        }
+
+    }
+}
