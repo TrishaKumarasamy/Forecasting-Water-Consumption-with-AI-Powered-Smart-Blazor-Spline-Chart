@@ -1,6 +1,6 @@
 # Water Consumption Forecasting with AI-Powered Blazor Spline Chart
 
-An intelligent water consumption forecasting application built with **Blazor Server**, **Charts**, and **Azure OpenAI**, demonstrating real-time data visualization and AI-powered predictions.
+An intelligent water consumption forecasting application built with **Blazor Server**, **[Blazor Charts]()**, and **Azure OpenAI**, demonstrating real-time data visualization and AI-powered predictions.
 
 ## Overview
 
@@ -54,9 +54,9 @@ dotnet run
 ```
 ## Resources
 
-- [Blazor Documentation](https://learn.microsoft.com/aspnet/core/blazor)
-- [Blazor Components](https://www.syncfusion.com/blazor-components)
-- [Azure OpenAI Service](https://learn.microsoft.com/azure/ai-services/openai/overview)
+- [Blazor Documentation](https://blazor.syncfusion.com/documentation/introduction)
+- [Blazor Spline Documentation](https://blazor.syncfusion.com/documentation/chart/chart-types/spline)
+- [Online Spline Demo](https://blazor.syncfusion.com/demos/chart/spline?theme=fluent2)
 
 
 
